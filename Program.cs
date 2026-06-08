@@ -14,11 +14,32 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. CONEXIÓN PRIVADA INTERNA RECOMENDADA POR RAILWAY (PUERTO 5432)
+// 2. CONEXIÓN DINÁMICA (CON RECOVERY AUTOMÁTICO DE RAILWAY)
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Usamos el host interno directo de la red privada de tu proyecto
-    var connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
+    // Railway inyecta automáticamente la variable "DATABASE_URL" en formato de URL de Postgres.
+    // Si existe, la usamos directamente porque Railway la mantiene viva y autorizada internamente.
+    var railwayEnvUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    string connectionString;
+
+    if (!string.IsNullOrEmpty(railwayEnvUrl))
+    {
+        // Convertimos el formato postgres://user:pass@host:port/db al formato que entiende Npgsql
+        var uri = new Uri(railwayEnvUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        var user = userInfo[0];
+        var password = userInfo[1];
+        var host = uri.Host;
+        var port = uri.Port;
+        var database = uri.AbsolutePath.TrimStart('/');
+
+        connectionString = $"Host={host};Port={port};Database={database};Username={user};Password={password};Include Error Detail=true;";
+    }
+    else
+    {
+        // Respaldo interno por si acaso
+        connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
+    }
 
     options.UseNpgsql(connectionString);
 });
@@ -38,7 +59,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.Migrate();
-        Console.WriteLine("¡Base de datos interna conectada con éxito!");
+        Console.WriteLine("¡Conexión dinámica configurada con éxito!");
     }
     catch (Exception ex)
     {

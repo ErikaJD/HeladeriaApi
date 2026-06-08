@@ -45,5 +45,5 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("DB migration error: " + ex.Message);
     }
 }
-
+//actualizacion
 app.Run();

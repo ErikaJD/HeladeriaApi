@@ -14,11 +14,17 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. CONEXIÓN DIRECTA CON LA CONTRASEÑA ACTUALIZADA DE RAILWAY
+// 2. CONEXIÓN NATIVA DE RAILWAY
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Usamos el host interno de Railway con tu contraseña real y viva
-    var connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
+    // Leemos la variable de entorno nativa que inyecta Railway
+    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+    // Si estás en local y no existe, usa la de respaldo
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
+    }
 
     options.UseNpgsql(connectionString);
 });
@@ -38,7 +44,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.Migrate();
-        Console.WriteLine("¡Base de datos interna conectada con éxito con la nueva clave!");
+        Console.WriteLine("¡Base de datos vinculada con éxito!");
     }
     catch (Exception ex)
     {

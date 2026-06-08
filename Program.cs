@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. CONFIGURACIÓN DE CONTROLADORES
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -14,16 +13,23 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. CONEXIÓN NATIVA DE RAILWAY
+// CONEXIÓN: convierte DATABASE_URL de Railway al formato que entiende Npgsql
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Leemos la variable de entorno nativa que inyecta Railway
-    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    var rawUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    string connectionString;
 
-    // Si estás en local y no existe, usa la de respaldo
-    if (string.IsNullOrEmpty(connectionString))
+    if (!string.IsNullOrEmpty(rawUrl))
     {
-        connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
+        // Convierte postgresql://user:password@host:port/database
+        var uri = new Uri(rawUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true;";
+    }
+    else
+    {
+        // Solo para desarrollo local
+        connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
     }
 
     options.UseNpgsql(connectionString);
@@ -37,7 +43,6 @@ app.UseSwaggerUI();
 app.UseAuthorization();
 app.MapControllers();
 
-// 3. MIGRACIÓN AUTOMÁTICA AL ARRANCAR
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<HeladeriaContext>();

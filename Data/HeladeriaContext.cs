@@ -20,19 +20,10 @@ public class HeladeriaContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Cliente>()
-            .ToTable("clientes");
-
-        modelBuilder.Entity<Categoria>()
-            .ToTable("categorias");
-
-        modelBuilder.Entity<Producto>()
-            .ToTable("productos");
-
-        modelBuilder.Entity<Pedido>()
-            .ToTable("pedidos");
-
-        modelBuilder.Entity<DetallePedido>()
-            .ToTable("detalle_pedidos");
+        modelBuilder.Entity<Categoria>().ToTable("categorias");
+        modelBuilder.Entity<Cliente>().ToTable("clientes");
+        modelBuilder.Entity<Producto>().ToTable("productos");
+        modelBuilder.Entity<Pedido>().ToTable("pedidos");
+        modelBuilder.Entity<DetallePedido>().ToTable("detalle_pedidos");
     }
 }

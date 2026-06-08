@@ -1,96 +1,70 @@
 ﻿using HeladeriaAPI.Data;
-using HeladeriaAPI.Models;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
-namespace HeladeriaAPI.Controllers;
+var builder = WebApplication.CreateBuilder(args);
 
-[ApiController]
-[Route("api/[controller]")]
-public class CategoriasController : ControllerBase
+// 1. CONFIGURACIÓN DE CONTROLADORES
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// 2. CONEXIÓN DINÁMICA (CON RECOVERY AUTOMÁTICO DE RAILWAY)
+builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    private readonly HeladeriaContext _context;
+    // Railway inyecta automáticamente la variable "DATABASE_URL" en formato de URL de Postgres.
+    // Si existe, la usamos directamente porque Railway la mantiene viva y autorizada internamente.
+    var railwayEnvUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    string connectionString;
 
-    public CategoriasController(HeladeriaContext context)
+    if (!string.IsNullOrEmpty(railwayEnvUrl))
     {
-        _context = context;
+        // Convertimos el formato postgres://user:pass@host:port/db al formato que entiende Npgsql
+        var uri = new Uri(railwayEnvUrl);
+        var userInfo = uri.UserInfo.Split(':');
+        var user = userInfo[0];
+        var password = userInfo[1];
+        var host = uri.Host;
+        var port = uri.Port;
+        var database = uri.AbsolutePath.TrimStart('/');
+
+        connectionString = $"Host={host};Port={port};Database={database};Username={user};Password={password};Include Error Detail=true;";
+    }
+    else
+    {
+        // Respaldo interno por si acaso
+        connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Categoria>>> GetCategorias()
+    options.UseNpgsql(connectionString);
+});
+
+var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseAuthorization();
+app.MapControllers();
+
+// 3. MIGRACIÓN AUTOMÁTICA AL ARRANCAR
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<HeladeriaContext>();
+    try
     {
-        try
-        {
-            return await _context.Categorias.ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest($"Error al obtener categorías: {ex.Message} || Inner: {ex.InnerException?.Message}");
-        }
+        db.Database.Migrate();
+        Console.WriteLine("¡Conexión dinámica configurada con éxito!");
     }
-
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Categoria>> GetCategoria(int id)
+    catch (Exception ex)
     {
-        var categoria = await _context.Categorias.FindAsync(id);
-
-        if (categoria == null)
-            return NotFound();
-
-        return categoria;
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<Categoria>> PostCategoria(Categoria categoria)
-    {
-        try
-        {
-            // Forzamos a que ignore el ID enviado para que Postgres use su SERIAL / IDENTITY autoincremental
-            categoria.Id_Categoria = 0;
-
-            _context.Categorias.Add(categoria);
-            await _context.SaveChangesAsync();
-
-            // Usamos una respuesta Ok directa para evitar que CreatedAtAction rompa el enrutamiento
-            return Ok(categoria);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest($"Error al guardar categoría: {ex.Message} || Inner: {ex.InnerException?.Message}");
-        }
-    }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> PutCategoria(int id, Categoria categoria)
-    {
-        if (id != categoria.Id_Categoria)
-            return BadRequest();
-
-        _context.Entry(categoria).State = EntityState.Modified;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            return BadRequest($"Error al actualizar: {ex.Message}");
-        }
-
-        return NoContent();
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteCategoria(int id)
-    {
-        var categoria = await _context.Categorias.FindAsync(id);
-
-        if (categoria == null)
-            return NotFound();
-
-        _context.Categorias.Remove(categoria);
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        Console.WriteLine("DB migration error: " + ex.Message);
     }
 }
+
+app.Run();

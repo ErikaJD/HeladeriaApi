@@ -14,38 +14,20 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. CONFIGURACIÓN DINÁMICA DE LA BASE DE DATOS (RAILWAY / LOCAL)
+// 2. CONFIGURACIÓN FORZADA MEDIANTE NUESTRA VARIABLE MANUAL
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Buscamos la variable en el entorno o en el config de .NET (Railway la mete como ConnectionStrings o variable pura)
-    var connectionString = builder.Configuration["DATABASE_URL"]
-                           ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+    // Buscamos directamente la variable manual de texto plano que acabamos de crear
+    var connectionString = builder.Configuration["CADENA_PRODUCCION"]
+                           ?? Environment.GetEnvironmentVariable("CADENA_PRODUCCION");
 
-    // Si no se encuentra de ninguna forma en Railway, recurrimos al appsettings de desarrollo
+    // Si está vacía (desarrollo local), usa la tradicional de appsettings
     if (string.IsNullOrEmpty(connectionString))
     {
         connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        options.UseNpgsql(connectionString);
     }
-    else
-    {
-        // Si la URL viene con "postgresql://", la parseamos para Npgsql
-        if (connectionString.StartsWith("postgres"))
-        {
-            var databaseUri = new Uri(connectionString);
-            var userInfo = databaseUri.UserInfo.Split(':');
 
-            var host = databaseUri.Host;
-            var port = databaseUri.Port;
-            var database = databaseUri.AbsolutePath.TrimStart('/');
-            var username = userInfo[0];
-            var password = userInfo[1];
-
-            connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};Include Error Detail=true;";
-        }
-
-        options.UseNpgsql(connectionString);
-    }
+    options.UseNpgsql(connectionString);
 });
 
 var app = builder.Build();
@@ -63,7 +45,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.Migrate();
-        Console.WriteLine("¡Base de datos conectada y migrada con éxito!");
+        Console.WriteLine("¡Base de datos conectada con éxito!");
     }
     catch (Exception ex)
     {

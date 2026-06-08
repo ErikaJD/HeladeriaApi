@@ -16,58 +16,98 @@ public class CategoriasController : ControllerBase
         _context = context;
     }
 
+    // GET: api/Categorias
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Categoria>>> GetCategorias()
     {
-        var categorias = await _context.Categorias.ToListAsync();
-        return Ok(categorias);
+        try
+        {
+            var categorias = await _context.Categorias.ToListAsync();
+            return Ok(categorias);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.ToString());
+        }
     }
 
+    // GET: api/Categorias/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Categoria>> GetCategoria(int id)
     {
-        var categoria = await _context.Categorias.FindAsync(id);
+        try
+        {
+            var categoria = await _context.Categorias.FindAsync(id);
 
-        if (categoria == null)
-            return NotFound("Categoría no encontrada.");
+            if (categoria == null)
+                return NotFound("Categoría no encontrada.");
 
-        return Ok(categoria);
+            return Ok(categoria);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.ToString());
+        }
     }
 
+    // POST: api/Categorias
     [HttpPost]
     public async Task<ActionResult<Categoria>> PostCategoria(Categoria categoria)
     {
-        categoria.Id_Categoria = 0;
+        try
+        {
+            categoria.Id_Categoria = 0;
 
-        _context.Categorias.Add(categoria);
-        await _context.SaveChangesAsync();
+            _context.Categorias.Add(categoria);
+            await _context.SaveChangesAsync();
 
-        return Ok(categoria);
+            return Ok(categoria);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.ToString());
+        }
     }
 
+    // PUT: api/Categorias/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCategoria(int id, Categoria categoria)
     {
-        if (id != categoria.Id_Categoria)
-            return BadRequest("El ID no coincide.");
+        try
+        {
+            if (id != categoria.Id_Categoria)
+                return BadRequest("El ID no coincide.");
 
-        _context.Entry(categoria).State = EntityState.Modified;
-        await _context.SaveChangesAsync();
+            _context.Entry(categoria).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.ToString());
+        }
     }
 
+    // DELETE: api/Categorias/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategoria(int id)
     {
-        var categoria = await _context.Categorias.FindAsync(id);
+        try
+        {
+            var categoria = await _context.Categorias.FindAsync(id);
 
-        if (categoria == null)
-            return NotFound("Categoría no encontrada.");
+            if (categoria == null)
+                return NotFound("Categoría no encontrada.");
 
-        _context.Categorias.Remove(categoria);
-        await _context.SaveChangesAsync();
+            _context.Categorias.Remove(categoria);
+            await _context.SaveChangesAsync();
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.ToString());
+        }
     }
 }

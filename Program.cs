@@ -38,6 +38,8 @@ builder.Services.AddDbContext<HeladeriaContext>(options =>
 
 var app = builder.Build();
 
+app.UseDeveloperExceptionPage();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 

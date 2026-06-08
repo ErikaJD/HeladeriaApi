@@ -42,5 +42,6 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("DB migration error: " + ex.Message);
     }
 }
+// Conexión corregida para producción en la heladería
 
 app.Run();

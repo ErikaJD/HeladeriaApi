@@ -9,14 +9,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // CONFIGURACIÓN DE LA BASE DE DATOS FORZADA DESDE CONFIGURACIÓN
+// CONFIGURACIÓN DE LA BASE DE DATOS FORZADA DESDE CONFIGURACIÓN
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Al usar builder.Configuration.GetConnectionString, .NET busca automáticamente
-    // tanto en tu appsettings.json como en las variables de Railway sin romperse.
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-    options.UseNpgsql(connectionString)
-           .UseSnakeCaseNamingConvention();
+    // Solo dejamos Npgsql. Tus etiquetas [Column] y [Table] se encargan del resto.
+    options.UseNpgsql(connectionString);
 });
 
 var app = builder.Build();

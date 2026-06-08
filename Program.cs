@@ -5,15 +5,18 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Controllers
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
+// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// PostgreSQL Railway
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
     var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
@@ -43,13 +46,16 @@ builder.Services.AddDbContext<HeladeriaContext>(options =>
 
 var app = builder.Build();
 
+// Swagger
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Middleware
 app.UseAuthorization();
 
 app.MapControllers();
 
+// Migraciones automáticas
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<HeladeriaContext>();
@@ -57,11 +63,11 @@ using (var scope = app.Services.CreateScope())
     try
     {
         context.Database.Migrate();
-        Console.WriteLine("Base de datos conectada correctamente.");
+        Console.WriteLine("✅ Base de datos conectada correctamente.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine("Error al conectar con PostgreSQL:");
+        Console.WriteLine("❌ Error al conectar con PostgreSQL:");
         Console.WriteLine(ex.ToString());
     }
 }

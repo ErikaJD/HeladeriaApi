@@ -14,11 +14,10 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. CADENA DE PRODUCCIÓN FIJA (Eliminamos por completo el localhost)
-// RESPALDO MAESTRO: CONEXIÓN INTERNA DIRECTA POR EL PUERTO 5432
+// 2. CONEXIÓN PRIVADA INTERNA RECOMENDADA POR RAILWAY (PUERTO 5432)
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Usamos el host privado interno que no requiere proxy ni configuraciones de SSL externas
+    // Usamos el host interno directo de la red privada de tu proyecto
     var connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
 
     options.UseNpgsql(connectionString);
@@ -39,12 +38,12 @@ using (var scope = app.Services.CreateScope())
     try
     {
         db.Database.Migrate();
-        Console.WriteLine("¡Conexión forzada exitosa!");
+        Console.WriteLine("¡Base de datos interna conectada con éxito!");
     }
     catch (Exception ex)
     {
         Console.WriteLine("DB migration error: " + ex.Message);
     }
 }
-//actualizacion
+
 app.Run();

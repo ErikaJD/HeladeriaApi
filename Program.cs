@@ -18,8 +18,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
     // Usamos directamente tu dominio proxy externo verificado con el puerto público
-    var connectionString = "Host=autorack.proxy.rlwy.net;Port=15822;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
-
+    // Añadimos SslMode=Require y TrustServerCertificate=true para proteger el canal proxy público
+    var connectionString = "Host=autorack.proxy.rlwy.net;Port=15822;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;SslMode=Require;TrustServerCertificate=true;Include Error Detail=true;";
     options.UseNpgsql(connectionString);
 });
 

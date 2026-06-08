@@ -15,11 +15,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // 2. CADENA DE PRODUCCIÓN FIJA (Eliminamos por completo el localhost)
+// RESPALDO MAESTRO: CONEXIÓN INTERNA DIRECTA POR EL PUERTO 5432
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Usamos directamente tu dominio proxy externo verificado con el puerto público
-    // Añadimos SslMode=Require y TrustServerCertificate=true para proteger el canal proxy público
-    var connectionString = "Host=autorack.proxy.rlwy.net;Port=15822;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;SslMode=Require;TrustServerCertificate=true;Include Error Detail=true;";
+    // Usamos el host privado interno que no requiere proxy ni configuraciones de SSL externas
+    var connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
+
     options.UseNpgsql(connectionString);
 });
 

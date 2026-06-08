@@ -1,5 +1,6 @@
 using HeladeriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,34 +16,53 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    var host = Environment.GetEnvironmentVariable("PGHOST") ?? "postgres.railway.internal";
-    var port = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
-    var db = Environment.GetEnvironmentVariable("PGDATABASE") ?? "railway";
-    var user = Environment.GetEnvironmentVariable("PGUSER") ?? "postgres";
-    var pass = Environment.GetEnvironmentVariable("PGPASSWORD") ?? "kHtburGXECttprHpPdvkImCHliTrtFYG";
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
-    var connectionString = $"Host={host};Port={port};Database={db};Username={user};Password={pass};Include Error Detail=true;";
-    options.UseNpgsql(connectionString);
+    if (string.IsNullOrEmpty(databaseUrl))
+    {
+        throw new Exception("No existe la variable DATABASE_URL en Railway.");
+    }
+
+    var databaseUri = new Uri(databaseUrl);
+    var userInfo = databaseUri.UserInfo.Split(':');
+
+    var connectionStringBuilder = new NpgsqlConnectionStringBuilder
+    {
+        Host = databaseUri.Host,
+        Port = databaseUri.Port,
+        Username = userInfo[0],
+        Password = userInfo[1],
+        Database = databaseUri.AbsolutePath.TrimStart('/'),
+        SslMode = SslMode.Require,
+        TrustServerCertificate = true,
+        IncludeErrorDetail = true
+    };
+
+    options.UseNpgsql(connectionStringBuilder.ConnectionString);
 });
 
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
 app.UseAuthorization();
+
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<HeladeriaContext>();
+    var context = scope.ServiceProvider.GetRequiredService<HeladeriaContext>();
+
     try
     {
-        db.Database.Migrate();
-        Console.WriteLine("¡Base de datos vinculada con éxito!");
+        context.Database.Migrate();
+        Console.WriteLine("Base de datos conectada correctamente.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine("DB migration error: " + ex.Message);
+        Console.WriteLine("Error al conectar con PostgreSQL:");
+        Console.WriteLine(ex.ToString());
     }
 }
 

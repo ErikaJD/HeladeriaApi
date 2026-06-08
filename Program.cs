@@ -8,7 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Evita que la API truene con Error 500 si hay relaciones circulares (ej. Categoria -> Producto -> Categoria)
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
@@ -18,52 +17,53 @@ builder.Services.AddSwaggerGen();
 // 2. CONFIGURACIÓN DINÁMICA DE LA BASE DE DATOS (RAILWAY / LOCAL)
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Intentamos leer la variable oficial enlazada desde el panel de Railway
-    var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL");
+    // Buscamos la variable en el entorno o en el config de .NET (Railway la mete como ConnectionStrings o variable pura)
+    var connectionString = builder.Configuration["DATABASE_URL"]
+                           ?? Environment.GetEnvironmentVariable("DATABASE_URL");
 
+    // Si no se encuentra de ninguna forma en Railway, recurrimos al appsettings de desarrollo
     if (string.IsNullOrEmpty(connectionString))
     {
-        // Si la variable está vacía (entorno local de desarrollo), usa el appsettings.json tradicional
         connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
         options.UseNpgsql(connectionString);
     }
     else
     {
-        // Si está en Railway, parseamos la URL automáticamente (convierte postgresql:// a un formato válido para EF Core)
-        var databaseUri = new Uri(connectionString);
-        var userInfo = databaseUri.UserInfo.Split(':');
+        // Si la URL viene con "postgresql://", la parseamos para Npgsql
+        if (connectionString.StartsWith("postgres"))
+        {
+            var databaseUri = new Uri(connectionString);
+            var userInfo = databaseUri.UserInfo.Split(':');
 
-        var host = databaseUri.Host;
-        var port = databaseUri.Port;
-        var database = databaseUri.AbsolutePath.TrimStart('/');
-        var username = userInfo[0];
-        var password = userInfo[1];
+            var host = databaseUri.Host;
+            var port = databaseUri.Port;
+            var database = databaseUri.AbsolutePath.TrimStart('/');
+            var username = userInfo[0];
+            var password = userInfo[1];
 
-        // Construimos la cadena de conexión limpia compatible con Npgsql
-        var formattedConnectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};Include Error Detail=true;";
+            connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};Include Error Detail=true;";
+        }
 
-        options.UseNpgsql(formattedConnectionString);
+        options.UseNpgsql(connectionString);
     }
 });
 
 var app = builder.Build();
 
-// 3. CONFIGURACIÓN DEL PIPELINE HTTP (SWAGGER EN PRODUCCIÓN)
-// Dejamos Swagger fuera de "if (app.Environment.IsDevelopment())" para que abra en Railway perfectamente
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseAuthorization();
 app.MapControllers();
 
-// 4. 🔥 MIGRACIÓN AUTOMÁTICA Y SEGURA AL ARRANCAR EL CONTENEDOR
+// 4. 🔥 MIGRACIÓN AUTOMÁTICA AL ARRANCAR
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<HeladeriaContext>();
     try
     {
         db.Database.Migrate();
-        Console.WriteLine("¡Migración e inicio de Base de Datos aplicados con éxito!");
+        Console.WriteLine("¡Base de datos conectada y migrada con éxito!");
     }
     catch (Exception ex)
     {

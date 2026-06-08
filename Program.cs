@@ -15,11 +15,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // CONFIGURACIÓN DE LA BASE DE DATOS FORZADA DESDE CONFIGURACIÓN
+// CONFIGURACIÓN DE LA BASE DE DATOS HARDCODED PARA EVITAR LOCALHOST
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    // Forzamos la cadena real interna de Railway directamente aquí
+    var connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
 
-    // Solo dejamos Npgsql. Tus etiquetas [Column] y [Table] se encargan del resto.
     options.UseNpgsql(connectionString);
 });
 

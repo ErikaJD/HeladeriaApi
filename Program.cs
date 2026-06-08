@@ -1,61 +1,50 @@
 using HeladeriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Controllers
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.ReferenceHandler =
+            ReferenceHandler.IgnoreCycles;
     });
 
-// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// PostgreSQL Railway
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+    var host = Environment.GetEnvironmentVariable("PGHOST");
+    var port = Environment.GetEnvironmentVariable("PGPORT");
+    var database = Environment.GetEnvironmentVariable("PGDATABASE");
+    var username = Environment.GetEnvironmentVariable("PGUSER");
+    var password = Environment.GetEnvironmentVariable("PGPASSWORD");
 
-    if (string.IsNullOrEmpty(databaseUrl))
-    {
-        throw new Exception("No existe la variable DATABASE_URL en Railway.");
-    }
+    var connectionString =
+        $"Host={host};" +
+        $"Port={port};" +
+        $"Database={database};" +
+        $"Username={username};" +
+        $"Password={password};" +
+        $"SSL Mode=Disable;" +
+        $"Include Error Detail=true;";
 
-    var databaseUri = new Uri(databaseUrl);
-    var userInfo = databaseUri.UserInfo.Split(':');
+    Console.WriteLine($"Conectando a {host}:{port}/{database}");
 
-    var connectionStringBuilder = new NpgsqlConnectionStringBuilder
-    {
-        Host = databaseUri.Host,
-        Port = databaseUri.Port,
-        Username = userInfo[0],
-        Password = userInfo[1],
-        Database = databaseUri.AbsolutePath.TrimStart('/'),
-        SslMode = SslMode.Require,
-        TrustServerCertificate = true,
-        IncludeErrorDetail = true
-    };
-
-    options.UseNpgsql(connectionStringBuilder.ConnectionString);
+    options.UseNpgsql(connectionString);
 });
 
 var app = builder.Build();
 
-// Swagger
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// Middleware
 app.UseAuthorization();
 
 app.MapControllers();
 
-// Migraciones automáticas
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<HeladeriaContext>();
@@ -63,11 +52,10 @@ using (var scope = app.Services.CreateScope())
     try
     {
         context.Database.Migrate();
-        Console.WriteLine("✅ Base de datos conectada correctamente.");
+        Console.WriteLine("Base de datos conectada correctamente.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine("❌ Error al conectar con PostgreSQL:");
         Console.WriteLine(ex.ToString());
     }
 }

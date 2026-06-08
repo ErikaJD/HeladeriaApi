@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HeladeriaApi.Migrations
 {
     [DbContext(typeof(HeladeriaContext))]
-    [Migration("20260608150727_InicializarHeladeria")]
-    partial class InicializarHeladeria
+    [Migration("20260608163718_NuevaInicialHeladeria")]
+    partial class NuevaInicialHeladeria
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,7 +43,8 @@ namespace HeladeriaApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("nombre");
 
-                    b.HasKey("Id_Categoria");
+                    b.HasKey("Id_Categoria")
+                        .HasName("pk_categorias");
 
                     b.ToTable("categorias", (string)null);
                 });
@@ -74,7 +75,8 @@ namespace HeladeriaApi.Migrations
                         .HasColumnType("text")
                         .HasColumnName("telefono");
 
-                    b.HasKey("Id_Cliente");
+                    b.HasKey("Id_Cliente")
+                        .HasName("pk_clientes");
 
                     b.ToTable("clientes", (string)null);
                 });
@@ -104,7 +106,8 @@ namespace HeladeriaApi.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("subtotal");
 
-                    b.HasKey("Id_Detalle");
+                    b.HasKey("Id_Detalle")
+                        .HasName("pk_detalle_pedidos");
 
                     b.ToTable("detalle_pedidos", (string)null);
                 });
@@ -130,7 +133,8 @@ namespace HeladeriaApi.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("total");
 
-                    b.HasKey("Id_Pedido");
+                    b.HasKey("Id_Pedido")
+                        .HasName("pk_pedidos");
 
                     b.ToTable("pedidos", (string)null);
                 });
@@ -161,7 +165,8 @@ namespace HeladeriaApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("stock");
 
-                    b.HasKey("Id_Producto");
+                    b.HasKey("Id_Producto")
+                        .HasName("pk_productos");
 
                     b.ToTable("productos", (string)null);
                 });

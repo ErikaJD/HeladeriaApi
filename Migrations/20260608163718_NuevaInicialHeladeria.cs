@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HeladeriaApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InicializarHeladeria : Migration
+    public partial class NuevaInicialHeladeria : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -23,7 +23,7 @@ namespace HeladeriaApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_categorias", x => x.id_categoria);
+                    table.PrimaryKey("pk_categorias", x => x.id_categoria);
                 });
 
             migrationBuilder.CreateTable(
@@ -39,7 +39,7 @@ namespace HeladeriaApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_clientes", x => x.id_cliente);
+                    table.PrimaryKey("pk_clientes", x => x.id_cliente);
                 });
 
             migrationBuilder.CreateTable(
@@ -55,7 +55,7 @@ namespace HeladeriaApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_detalle_pedidos", x => x.id_detalle);
+                    table.PrimaryKey("pk_detalle_pedidos", x => x.id_detalle);
                 });
 
             migrationBuilder.CreateTable(
@@ -70,7 +70,7 @@ namespace HeladeriaApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_pedidos", x => x.id_pedido);
+                    table.PrimaryKey("pk_pedidos", x => x.id_pedido);
                 });
 
             migrationBuilder.CreateTable(
@@ -86,7 +86,7 @@ namespace HeladeriaApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_productos", x => x.id_producto);
+                    table.PrimaryKey("pk_productos", x => x.id_producto);
                 });
         }
 

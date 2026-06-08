@@ -1,14 +1,19 @@
 using HeladeriaAPI.Data;
 using Microsoft.EntityFrameworkCore;
-using EFCore.NamingConventions;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// CORRECCIÓN AQUÍ: Agrega soporte para evitar bucles de referencia usando el serializador nativo
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CONFIGURACIÓN DE LA BASE DE DATOS FORZADA DESDE CONFIGURACIÓN
 // CONFIGURACIÓN DE LA BASE DE DATOS FORZADA DESDE CONFIGURACIÓN
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {

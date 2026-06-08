@@ -12,8 +12,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
     var connectionString =
-        builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+        builder.Configuration.GetConnectionString("DefaultConnection");
 
     options.UseNpgsql(connectionString);
 });

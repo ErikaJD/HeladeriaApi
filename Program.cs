@@ -19,9 +19,24 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // 2. Configuración de la Base de Datos PostgreSQL
+// 2. Configuración de la Base de Datos PostgreSQL
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    // Cambiamos esto para que use directamente la URL de producción en Render
+    var connectionUrl = "postgresql://heladeria_u:1SVQiPPnU721pWOA2NKUXYZkGCj0CNHu@dpg-d8j2her7uimc73b9kk50-a.virginia-postgres.render.com/heladeria_chy4\r\n";
+
+    // .NET necesita convertir el formato postgres:// a un formato entendible por Npgsql
+    var databaseUri = new Uri(connectionUrl);
+    var userInfo = databaseUri.UserInfo.Split(':');
+
+    var connectionString = $"Host={databaseUri.Host};" +
+                           $"Port={databaseUri.Port};" +
+                           $"Username={userInfo[0]};" +
+                           $"Password={userInfo[1]};" +
+                           $"Database={databaseUri.LocalPath.TrimStart('/')};" +
+                           $"SslMode=Require;" +
+                           $"Trust Server Certificate=True;";
+
     options.UseNpgsql(connectionString);
 });
 

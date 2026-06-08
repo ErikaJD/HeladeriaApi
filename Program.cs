@@ -16,10 +16,11 @@ builder.Services.AddSwaggerGen();
 
 // CONFIGURACIÓN DE LA BASE DE DATOS FORZADA DESDE CONFIGURACIÓN
 // CONFIGURACIÓN DE LA BASE DE DATOS EXTERNA PARA EVITAR EL CAMBIO DE CLAVE INTERNO
+// CONFIGURACIÓN INTERNA DEFINITIVA (PUERTO 5432)
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Usamos el dominio público y el puerto 5432 (o el que te dé la url externa) con tu clave
-    var connectionString = "Host=autorack.proxy.rlwy.net;Port=15822;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
+    // Usamos el host interno, el puerto 5432 y tu contraseña verificada
+    var connectionString = "Host=postgres.railway.internal;Port=5432;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
 
     options.UseNpgsql(connectionString);
 });

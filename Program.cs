@@ -15,7 +15,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    var host = Environment.GetEnvironmentVariable("PGHOST") ?? "localhost";
+    var host = Environment.GetEnvironmentVariable("PGHOST") ?? "postgres.railway.internal";
     var port = Environment.GetEnvironmentVariable("PGPORT") ?? "5432";
     var db = Environment.GetEnvironmentVariable("PGDATABASE") ?? "railway";
     var user = Environment.GetEnvironmentVariable("PGUSER") ?? "postgres";

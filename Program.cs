@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. CONFIGURACIÓN DE CONTROLADORES + EVITAR BUCLES INFINITOS DE JSON
+// 1. CONFIGURACIÓN DE CONTROLADORES
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -14,18 +14,11 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// 2. CONFIGURACIÓN FORZADA MEDIANTE NUESTRA VARIABLE MANUAL
+// 2. CADENA DE PRODUCCIÓN FIJA (Eliminamos por completo el localhost)
 builder.Services.AddDbContext<HeladeriaContext>(options =>
 {
-    // Buscamos directamente la variable manual de texto plano que acabamos de crear
-    var connectionString = builder.Configuration["CADENA_PRODUCCION"]
-                           ?? Environment.GetEnvironmentVariable("CADENA_PRODUCCION");
-
-    // Si está vacía (desarrollo local), usa la tradicional de appsettings
-    if (string.IsNullOrEmpty(connectionString))
-    {
-        connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    }
+    // Usamos directamente tu dominio proxy externo verificado con el puerto público
+    var connectionString = "Host=autorack.proxy.rlwy.net;Port=15822;Database=railway;Username=postgres;Password=kHtburGXECttprHpPdvkImCHliTrtFYG;Include Error Detail=true;";
 
     options.UseNpgsql(connectionString);
 });
@@ -38,14 +31,14 @@ app.UseSwaggerUI();
 app.UseAuthorization();
 app.MapControllers();
 
-// 4. 🔥 MIGRACIÓN AUTOMÁTICA AL ARRANCAR
+// 3. MIGRACIÓN AUTOMÁTICA AL ARRANCAR
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<HeladeriaContext>();
     try
     {
         db.Database.Migrate();
-        Console.WriteLine("¡Base de datos conectada con éxito!");
+        Console.WriteLine("¡Conexión forzada exitosa!");
     }
     catch (Exception ex)
     {

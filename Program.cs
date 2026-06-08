@@ -37,7 +37,7 @@ builder.Services.AddDbContext<HeladeriaContext>(options =>
 
     options.UseNpgsql(connectionString);
 });
-
+//
 var app = builder.Build();
 
 app.UseDeveloperExceptionPage();

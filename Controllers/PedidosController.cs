@@ -36,13 +36,22 @@ public class PedidosController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Pedido>> PostPedido(Pedido pedido)
     {
-        _context.Pedidos.Add(pedido);
-        await _context.SaveChangesAsync();
+        try
+        {
+            // Asegurar que PostgreSQL genere el ID automáticamente
+            pedido.Id_Pedido = 0;
 
-        return CreatedAtAction(
-            nameof(GetPedido),
-            new { id = pedido.Id_Pedido },
-            pedido);
+            _context.Pedidos.Add(pedido);
+            await _context.SaveChangesAsync();
+
+            // Regresa el pedido creado con su Id_Pedido
+            return Ok(pedido);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(
+                $"Error al guardar pedido: {ex.Message} || Inner: {ex.InnerException?.Message}");
+        }
     }
 
     [HttpPut("{id}")]
